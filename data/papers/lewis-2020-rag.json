@@ -1,0 +1,64 @@
+{
+  "id": "lewis-2020-rag",
+  "status": "published",
+  "demo": true,
+  "source": {
+    "filename": null,
+    "sha256": null,
+    "model": null
+  },
+  "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+  "shortTitle": "RAG",
+  "year": 2020,
+  "authors": [
+    "Patrick Lewis",
+    "Ethan Perez",
+    "Aleksandra Piktus",
+    "Fabio Petroni",
+    "Vladimir Karpukhin",
+    "Naman Goyal",
+    "Heinrich Küttler",
+    "Mike Lewis",
+    "Wen-tau Yih",
+    "Tim Rocktäschel",
+    "Sebastian Riedel",
+    "Douwe Kiela"
+  ],
+  "summary": "結合序列生成模型與維基百科段落索引，讓知識密集任務在生成時可以參考檢索結果。研究比較依整段輸出與逐詞元使用檢索證據的兩種做法。",
+  "topics": [
+    "檢索增強生成",
+    "稠密檢索",
+    "開放領域問答",
+    "語言模型"
+  ],
+  "references": [
+    {
+      "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+      "doi": null,
+      "url": "https://arxiv.org/abs/2004.04906",
+      "page": 12
+    }
+  ],
+  "doi": "10.48550/arXiv.2005.11401",
+  "sourceUrl": "https://arxiv.org/pdf/2005.11401v4",
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "模型參數難以更新與追溯來源，研究因此探討如何接入外部知識。",
+      "page": 1,
+      "location": "Abstract"
+    },
+    {
+      "kind": "方法",
+      "text": "用 DPR 檢索維基百科段落，讓 BART 以問題與檢索段落為條件生成。",
+      "page": 2,
+      "location": "2 Methods"
+    },
+    {
+      "kind": "發現",
+      "text": "RAG 在多項開放領域問答測試中達到論文當時領先的準確率。",
+      "page": 6,
+      "location": "表 1"
+    }
+  ]
+}

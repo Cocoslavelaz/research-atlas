@@ -1,0 +1,123 @@
+---
+import { citations, papers, topics } from '../lib/atlas.mjs'
+const { preview = false } = Astro.props
+const visiblePapers = preview ? papers.slice(0, 5) : papers
+const ids = new Set(visiblePapers.map(paper => paper.id))
+const visibleTopics = (preview ? topics.slice(0, 6) : topics).filter(topic => topic.papers.some(id => ids.has(id)))
+const nodes = [
+  ...visiblePapers.map(paper => ({ id: 'p:' + paper.id, label: paper.shortTitle, kind: 'paper' })),
+  ...visibleTopics.map(topic => ({ id: 't:' + topic.id, label: topic.label, kind: 'topic' })),
+]
+const edges = [
+  ...visibleTopics.flatMap(topic => topic.papers.filter(id => ids.has(id))
+    .map(id => ({ from: 'p:' + id, to: 't:' + topic.id, kind: 'topic' }))),
+  ...citations.filter(edge => ids.has(edge.from) && ids.has(edge.to))
+    .map(edge => ({ from: 'p:' + edge.from, to: 'p:' + edge.to, kind: 'citation' })),
+]
+---
+<div class:list={['graph', { 'graph-preview': preview }]} data-graph={JSON.stringify({ nodes, edges })}>
+  {nodes.length ? <canvas aria-hidden="true"></canvas> : <p class="empty">發布論文後，這裡會顯示主題與文獻關係。</p>}
+  <div class="legend" aria-label="圖例">
+    <span><i class="paper-dot"></i> 論文</span>
+    <span><i class="topic-dot"></i> 主題</span>
+    <span><i class="citation-line"></i> 引用</span>
+  </div>
+</div>
+
+<script>
+  for (const graph of document.querySelectorAll<HTMLElement>('[data-graph]')) {
+    const canvas = graph.querySelector('canvas')
+    const ctx = canvas?.getContext('2d')
+    if (!canvas || !ctx) continue
+    const { nodes, edges } = JSON.parse(graph.dataset.graph!)
+    const preview = graph.classList.contains('graph-preview')
+    let focus = ''
+    const points = new Map()
+    function draw() {
+      const width = canvas!.clientWidth
+      const height = canvas!.clientHeight
+      const scale = window.devicePixelRatio || 1
+      canvas!.width = width * scale
+      canvas!.height = height * scale
+      ctx!.scale(scale, scale)
+      const authors = nodes.filter(node => node.kind === 'paper')
+      const themes = nodes.filter(node => node.kind === 'topic')
+      for (const [group, radius, offset] of [[authors, .44, -.65], [themes, 1, -Math.PI / 2]]) {
+        group.forEach((node, index) => {
+          const angle = offset + index * Math.PI * 2 / group.length
+          const x = width / 2 + Math.cos(angle) * Math.max(width / 2 - 73, 34) * radius
+          const y = height / 2 + Math.sin(angle) * (height / 2 - 33) * radius
+          points.set(node.id, { x, y })
+        })
+      }
+      const connected = new Set([focus])
+      for (const edge of edges) {
+        const from = points.get(edge.from)
+        const to = points.get(edge.to)
+        const citation = edge.kind === 'citation'
+        const highlighted = edge.from === focus || edge.to === focus
+        if (highlighted) {
+          connected.add(edge.from)
+          connected.add(edge.to)
+        }
+        ctx!.globalAlpha = focus && !highlighted ? .22 : 1
+        ctx!.strokeStyle = citation ? '#788d55' : '#aab7a2'
+        ctx!.lineWidth = citation ? 1.6 : 1
+        ctx!.setLineDash(citation ? [4, 4] : [])
+        ctx!.beginPath()
+        ctx!.moveTo(from.x, from.y)
+        ctx!.lineTo(to.x, to.y)
+        ctx!.stroke()
+        ctx!.setLineDash([])
+        if (citation) {
+          const angle = Math.atan2(to.y - from.y, to.x - from.x)
+          const x = to.x - Math.cos(angle) * 13
+          const y = to.y - Math.sin(angle) * 13
+          ctx!.beginPath()
+          ctx!.moveTo(x - 6 * Math.cos(angle - .5), y - 6 * Math.sin(angle - .5))
+          ctx!.lineTo(x, y)
+          ctx!.lineTo(x - 6 * Math.cos(angle + .5), y - 6 * Math.sin(angle + .5))
+          ctx!.stroke()
+        }
+      }
+      for (const node of nodes) {
+        const { x, y } = points.get(node.id)
+        const paper = node.kind === 'paper'
+        ctx!.globalAlpha = focus && !connected.has(node.id) ? .25 : 1
+        ctx!.beginPath()
+        ctx!.arc(x, y, paper ? 8 : 5, 0, 2 * Math.PI)
+        ctx!.fillStyle = paper ? '#315645' : '#c5d98c'
+        ctx!.fill()
+        ctx!.strokeStyle = paper ? '#e7eee1' : '#879760'
+        ctx!.lineWidth = paper ? 2 : 1
+        ctx!.stroke()
+        ctx!.font = `${paper ? 650 : 500} ${preview ? 11 : 13}px system-ui, sans-serif`
+        ctx!.textAlign = 'center'
+        const label = node.label.length > 18 ? node.label.slice(0, 17) + '…' : node.label
+        ctx!.lineWidth = 4
+        ctx!.strokeStyle = '#eef1e6'
+        ctx!.strokeText(label, x, y - (paper ? 14 : 10), 135)
+        ctx!.fillStyle = '#264537'
+        ctx!.fillText(label, x, y - (paper ? 14 : 10), 135)
+      }
+      ctx!.globalAlpha = 1
+    }
+    new ResizeObserver(draw).observe(canvas)
+    const filter = document.querySelector<HTMLSelectElement>('#graph-focus')
+    filter?.addEventListener('change', () => {
+      focus = filter.value
+      draw()
+    })
+    if (!preview && filter) canvas.addEventListener('click', event => {
+      const bounds = canvas.getBoundingClientRect()
+      const x = event.clientX - bounds.left
+      const y = event.clientY - bounds.top
+      const node = nodes.find(item => {
+        const point = points.get(item.id)
+        return point && Math.hypot(x - point.x, y - point.y) <= 13
+      })
+      filter.value = node?.id === focus ? '' : node?.id ?? ''
+      filter.dispatchEvent(new Event('change'))
+    })
+  }
+</script>

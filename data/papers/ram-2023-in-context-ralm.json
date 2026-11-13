@@ -1,0 +1,64 @@
+{
+  "id": "ram-2023-in-context-ralm",
+  "status": "published",
+  "demo": true,
+  "source": {
+    "filename": null,
+    "sha256": null,
+    "model": null
+  },
+  "title": "In-Context Retrieval-Augmented Language Models",
+  "shortTitle": "In-Context RALM",
+  "year": 2023,
+  "authors": [
+    "Ori Ram",
+    "Yoav Levine",
+    "Itay Dalmedigos",
+    "Dor Muhlgay",
+    "Amnon Shashua",
+    "Kevin Leyton-Brown",
+    "Yoav Shoham"
+  ],
+  "summary": "將檢索到的文件放入語言模型的輸入前綴，無須修改架構或再次訓練。研究比較多種模型與語料，並探討如何依語言建模需求挑選文件。",
+  "topics": [
+    "檢索增強生成",
+    "語言模型",
+    "語境學習"
+  ],
+  "references": [
+    {
+      "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "doi": null,
+      "url": null,
+      "page": 13
+    },
+    {
+      "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+      "doi": null,
+      "url": null,
+      "page": 12
+    }
+  ],
+  "doi": "10.48550/arXiv.2302.00083",
+  "sourceUrl": "https://arxiv.org/pdf/2302.00083v3",
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "如何在既有語言模型中利用外部文件，並保留模型架構與參數？",
+      "page": 1,
+      "location": "Abstract"
+    },
+    {
+      "kind": "方法",
+      "text": "檢索相關文件，接在原始前綴之前，再交由既有模型預測下一個詞元。",
+      "page": 3,
+      "location": "3.1 In-Context RALM"
+    },
+    {
+      "kind": "發現",
+      "text": "使用通用檢索器時，多種模型規模及語料都能得到語言建模效益。",
+      "page": 1,
+      "location": "Abstract"
+    }
+  ]
+}

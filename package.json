@@ -1,0 +1,17 @@
+{
+  "name": "research-atlas",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/check.mjs && astro build",
+    "preview": "astro preview",
+    "ingest": "node --env-file-if-exists=.env scripts/ingest.mjs",
+    "check": "node scripts/check.mjs"
+  },
+  "dependencies": {
+    "astro": "^6.0.0"
+  }
+}

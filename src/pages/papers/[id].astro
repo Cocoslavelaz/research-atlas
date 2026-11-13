@@ -1,0 +1,53 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import { paperUrl, papers, relatedPapers, route, sourceLink } from '../../lib/atlas.mjs'
+
+export function getStaticPaths() {
+  return papers.map(paper => ({ params: { id: paper.id }, props: { paper } }))
+}
+const { paper } = Astro.props
+const related = relatedPapers(paper)
+const source = sourceLink(paper)
+---
+<Layout title={paper.shortTitle + ' | Research Atlas'}>
+  <article class="detail">
+    <a class="text-link" href={route() + '#library'}>← 返回論文庫</a>
+    <header class="page-heading">
+      <div class="card-meta"><span>{paper.year ?? '年份待確認'}</span>{paper.demo && <span>示範文獻</span>}</div>
+      <h1>{paper.title}</h1>
+      <p>{paper.authors.join('、')}</p>
+      <ul class="tags" aria-label="研究主題">{paper.topics.map(topic => <li>{topic}</li>)}</ul>
+    </header>
+    <section class="detail-section">
+      <h2>中文摘要</h2>
+      <p class="lead">{paper.summary}</p>
+      {source && <a class="text-link" href={source}>閱讀原文 <span aria-hidden="true">↗</span></a>}
+      {paper.doi && <p class="muted">DOI <a href={'https://doi.org/' + encodeURI(paper.doi)}>{paper.doi}</a></p>}
+    </section>
+    <section class="detail-section">
+      <h2>研究重點</h2>
+      <ul class="notes">{paper.notes.map(note => <li>
+        <strong>{note.kind}</strong>
+        <div><p>{note.text}</p><small>PDF 第 {note.page} 頁 · {note.location}</small></div>
+      </li>)}</ul>
+    </section>
+    <section class="detail-section">
+      <h2>相關論文</h2>
+      {related.length ? <ul class="notes">{related.map(({ other, shared, outgoing, incoming }) => <li>
+        <a href={paperUrl(other.id)}>{other.shortTitle}</a>
+        <div>
+          {outgoing && <p>本篇引用此文 · 本篇 PDF 第 {outgoing.evidence.page} 頁</p>}
+          {incoming && <p>此文引用本篇 · 該文 PDF 第 {incoming.evidence.page} 頁</p>}
+          {shared.length > 0 && <p>共同主題 · {shared.join('、')}</p>}
+        </div>
+      </li>)}</ul> : <p>目前沒有相符的主題或庫內引用。</p>}
+    </section>
+    {paper.references.length > 0 && <section class="detail-section">
+      <h2>已整理的參考文獻</h2>
+      <ol class="reference-list">{paper.references.map(ref => <li>
+        {ref.url || ref.doi ? <a href={ref.url || 'https://doi.org/' + encodeURI(ref.doi!)}>{ref.title}</a> : ref.title}
+        <small>PDF 第 {ref.page} 頁</small>
+      </li>)}</ol>
+    </section>}
+  </article>
+</Layout>

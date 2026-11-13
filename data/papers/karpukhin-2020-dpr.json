@@ -1,0 +1,52 @@
+{
+  "id": "karpukhin-2020-dpr",
+  "status": "published",
+  "demo": true,
+  "source": {
+    "filename": null,
+    "sha256": null,
+    "model": null
+  },
+  "title": "Dense Passage Retrieval for Open-Domain Question Answering",
+  "shortTitle": "DPR",
+  "year": 2020,
+  "authors": [
+    "Vladimir Karpukhin",
+    "Barlas Oğuz",
+    "Sewon Min",
+    "Patrick Lewis",
+    "Ledell Wu",
+    "Sergey Edunov",
+    "Danqi Chen",
+    "Wen-tau Yih"
+  ],
+  "summary": "以雙編碼器把問題和段落表示成向量，為開放領域問答找出候選段落。多個問答資料集的前 20 筆段落檢索準確率優於 BM25 基準。",
+  "topics": [
+    "稠密檢索",
+    "開放領域問答",
+    "雙編碼器"
+  ],
+  "references": [],
+  "doi": "10.48550/arXiv.2004.04906",
+  "sourceUrl": "https://arxiv.org/pdf/2004.04906v3",
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "開放領域問答需要從大量段落中有效選出可能包含答案的上下文。",
+      "page": 1,
+      "location": "1 Introduction"
+    },
+    {
+      "kind": "方法",
+      "text": "用雙編碼器分別表示問題和段落，讓檢索可在稠密向量空間中進行。",
+      "page": 1,
+      "location": "Abstract"
+    },
+    {
+      "kind": "發現",
+      "text": "論文報告前 20 筆段落檢索準確率較 Lucene BM25 高 9 至 19 個百分點。",
+      "page": 1,
+      "location": "Abstract"
+    }
+  ]
+}

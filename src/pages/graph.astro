@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Graph from '../components/Graph.astro'
+import { papers, topics, citations, paperUrl } from '../lib/atlas.mjs'
+const byId = new Map(papers.map(paper => [paper.id, paper]))
+---
+<Layout title="知識圖譜 | Research Atlas" section="graph">
+  <section class="page-heading"><h1>知識圖譜</h1><p>透過共同主題探索論文，沿著箭頭找到被引用的文獻。</p></section>
+  <section class="graph-panel" aria-label="跨論文關係">
+    <label class="graph-filter">聚焦節點<select id="graph-focus">
+      <option value="">全部節點</option>
+      <optgroup label="論文">{papers.map(paper => <option value={'p:' + paper.id}>{paper.shortTitle}</option>)}</optgroup>
+      <optgroup label="主題">{topics.map(topic => <option value={'t:' + topic.id}>{topic.label}</option>)}</optgroup>
+    </select></label>
+    <Graph />
+  </section>
+  <div class="relationship-grid">
+    <section>
+      <h2>依主題瀏覽</h2>
+      {topics.length ? <div class="stack">{topics.map(topic => <div class="relationship" data-nodes={JSON.stringify(['t:' + topic.id, ...topic.papers.map(id => 'p:' + id)])}>
+        <h3>{topic.label}</h3>
+        <ul>{topic.papers.map(id => <li><a href={paperUrl(id)}>{byId.get(id)?.title}</a></li>)}</ul>
+      </div>)}</div> : <p>目前沒有已發布的主題。</p>}
+      <p id="no-topics" hidden>所選節點沒有相符的主題。</p>
+    </section>
+    <section>
+      <h2>文獻引用</h2>
+      {citations.length ? <div class="stack">{citations.map(edge => <div class="relationship" data-nodes={JSON.stringify(['p:' + edge.from, 'p:' + edge.to])}>
+        <p><a href={paperUrl(edge.from)}>{byId.get(edge.from)?.shortTitle}</a> → <a href={paperUrl(edge.to)}>{byId.get(edge.to)?.shortTitle}</a></p>
+        <p class="muted">來源為引用論文 PDF 第 {edge.evidence.page} 頁的參考文獻。</p>
+      </div>)}</div> : <p>目前沒有已核對且連到庫內論文的引用。</p>}
+      <p id="no-citations" hidden>所選節點沒有相符的庫內引用。</p>
+    </section>
+  </div>
+</Layout>
+<script>
+  const select = document.querySelector<HTMLSelectElement>('#graph-focus')!
+  select.addEventListener('change', () => {
+    for (const emptyId of ['#no-topics', '#no-citations']) {
+      const empty = document.querySelector<HTMLElement>(emptyId)!
+      const rows = [...empty.parentElement!.querySelectorAll<HTMLElement>('[data-nodes]')]
+      for (const row of rows) row.hidden = !!select.value && !JSON.parse(row.dataset.nodes!).includes(select.value)
+      empty.hidden = !rows.length || rows.some(row => !row.hidden)
+    }
+  })
+</script>

@@ -1,0 +1,65 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Graph from '../components/Graph.astro'
+import { papers, topics, citations, paperUrl, route } from '../lib/atlas.mjs'
+import { normalizeTopic } from '../../scripts/schema.mjs'
+---
+<Layout>
+  <section class="hero">
+    <div>
+      <h1>論文知識庫</h1>
+      <p class="hero-copy">整理研究重點、追溯原文，從共同主題與引用關係探索你的參考文獻。</p>
+      <a class="button" href="#library">瀏覽論文 <span aria-hidden="true">↓</span></a>
+    </div>
+    <a class="hero-graph" href={route('graph/')} aria-label="開啟知識圖譜">
+      <span class="preview-heading">知識圖譜 <span aria-hidden="true">↗</span></span>
+      <Graph preview />
+    </a>
+  </section>
+
+  <dl class="stats">
+    <div><dt>已發布論文</dt><dd>{papers.length}</dd></div>
+    <div><dt>研究主題</dt><dd>{topics.length}</dd></div>
+    <div><dt>庫內引用</dt><dd>{citations.length}</dd></div>
+  </dl>
+
+  <section id="library" class="library">
+    <div class="section-heading"><h2>論文總覽</h2><p id="count" aria-live="polite">{papers.length} 篇論文</p></div>
+    <div class="filters">
+      <label>搜尋論文<input id="query" type="search" placeholder="標題、作者、主題或關鍵字" /></label>
+      <label>研究主題<select id="topic"><option value="">全部主題</option>{topics.map(topic => <option value={topic.id}>{topic.label}（{topic.papers.length}）</option>)}</select></label>
+    </div>
+    <div class="paper-grid">
+      {papers.map(paper => <article class="paper-card" data-topics={JSON.stringify(paper.topics.map(normalizeTopic))} data-search={[paper.title, paper.shortTitle, paper.year, ...paper.authors, paper.summary, ...paper.topics, ...paper.notes.map(note => note.text)].join(' ').normalize('NFKC').toLowerCase()}>
+        <div class="card-meta"><span>{paper.year ?? '年份待確認'}</span>{paper.demo && <span>示範文獻</span>}</div>
+        <h3><a href={paperUrl(paper.id)}>{paper.title}</a></h3>
+        <p class="authors">{paper.authors.slice(0, 2).join('、')}{paper.authors.length > 2 && ' 等'}</p>
+        <p>{paper.summary}</p>
+        <ul class="tags" aria-label="主題">{paper.topics.map(topic => <li>{topic}</li>)}</ul>
+        <a class="text-link" href={paperUrl(paper.id)}>閱讀重點 <span aria-hidden="true">↗</span></a>
+      </article>)}
+    </div>
+    <p class="empty" id="no-results" hidden={papers.length > 0}>{papers.length ? '沒有符合的論文。試試其他關鍵字或主題。' : '尚無已發布論文。請從匯入指南開始。'}</p>
+  </section>
+</Layout>
+<script>
+  const query = document.querySelector<HTMLInputElement>('#query')!
+  const topic = document.querySelector<HTMLSelectElement>('#topic')!
+  const cards = [...document.querySelectorAll<HTMLElement>('.paper-card')]
+  const count = document.querySelector('#count')!
+  const empty = document.querySelector<HTMLElement>('#no-results')!
+  function filter() {
+    const terms = query.value.normalize('NFKC').trim().toLowerCase().split(/\s+/)
+    let matches = 0
+    for (const card of cards) {
+      const hasText = terms.every(term => card.dataset.search!.includes(term))
+      const hasTopic = !topic.value || JSON.parse(card.dataset.topics!).includes(topic.value)
+      card.hidden = !(hasText && hasTopic)
+      if (!card.hidden) matches++
+    }
+    count.textContent = `${matches} 篇論文`
+    empty.hidden = matches > 0
+  }
+  query.addEventListener('input', filter)
+  topic.addEventListener('change', filter)
+</script>
