@@ -17,7 +17,7 @@ export async function paperDataVersion(project) {
 
 export async function offlineDataVersion(project) {
   try {
-    const html = await readFile(join(project, 'index.html'), 'utf8')
+    const html = await readFile(join(project, '.atlas-offline', 'index.html'), 'utf8')
     return html.match(/^<!-- atlas-data:([a-f0-9]{64}) -->/)?.[1]
   } catch (error) {
     if (error.code !== 'ENOENT') throw error

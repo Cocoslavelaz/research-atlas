@@ -13,7 +13,7 @@ export default defineConfig({
   vite: {
     define: { 'import.meta.env.ATLAS_OFFLINE': process.env.ATLAS_OFFLINE === '1' },
     server: {
-      watch: { ignored: ['**/.private-papers', '**/.private-papers/**', '**/data/drafts/*.tmp', '**/.atlas-offline/**', '**/.atlas-trash/**', '**/index.html.*.tmp'] },
+      watch: { ignored: ['**/.private-papers', '**/.private-papers/**', '**/data/drafts/*.tmp', '**/.atlas-offline/**', '**/.atlas-trash/**'] },
       fs: { deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/.private-papers/**', '**/data/drafts/**', '**/.atlas-offline/**', '**/.atlas-trash/**'] },
     },
   },

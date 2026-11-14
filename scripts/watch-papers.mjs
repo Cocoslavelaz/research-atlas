@@ -48,14 +48,14 @@ export default function watchPapers() {
     try {
       if (!stopped && Date.now() >= retryOfflineAt &&
           await paperDataVersion(project) !== await offlineDataVersion(project)) {
-        logger.info('正在更新根目錄的 index.html')
+        logger.info('正在更新本機離線版')
         if (await runWorker(['scripts/build-offline.mjs'], logger) !== 0) {
           throw new Error('離線版建置失敗，稍後會重試')
         }
       }
     } catch (error) {
       retryOfflineAt = Date.now() + 10_000
-      if (!stopped) logger.warn(`無法更新 index.html：${error.message}`)
+      if (!stopped) logger.warn(`無法更新本機離線版：${error.message}`)
     } finally {
       if (!stopped) timer = setTimeout(() => void scan(logger), intervalMs)
     }
@@ -90,7 +90,7 @@ export default function watchPapers() {
     hooks: {
       'astro:server:start': ({ logger }) => {
         stopped = false
-        logger.info('正在監看 .private-papers，新增 PDF 會自動產生摘要並更新 index.html。')
+        logger.info('正在監看 .private-papers，新增 PDF 會自動產生摘要並更新本機離線版。')
         void scan(logger)
       },
       'astro:server:done': () => {

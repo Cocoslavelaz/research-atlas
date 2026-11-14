@@ -6,8 +6,8 @@ import { paperDataVersion } from './offline-state.mjs'
 
 const project = fileURLToPath(new URL('../', import.meta.url))
 const offline = join(project, '.atlas-offline')
-const index = join(project, 'index.html')
-const temporaryIndex = join(project, `index.html.${process.pid}.tmp`)
+const index = join(offline, 'index.html')
+const temporaryIndex = `${index}.${process.pid}.tmp`
 await mkdir(offline, { recursive: true })
 const output = await mkdtemp(join(offline, 'site-'))
 
@@ -57,10 +57,10 @@ try {
     if (error.code !== 'ENOENT') throw error
     return ''
   })
-  const previousSite = previousIndex.match(/(?:href|src)="\.atlas-offline\/(site-[a-zA-Z0-9]+)\//)?.[1]
+  const previousSite = previousIndex.match(/(?:href|src)="(site-[a-zA-Z0-9]+)\//)?.[1]
   const olderSite = previousIndex.match(/<!-- atlas-previous:(site-[a-zA-Z0-9]+) -->/)?.[1]
   const previousMarker = previousSite ? `<!-- atlas-previous:${previousSite} -->\n` : ''
-  const content = `<!-- atlas-data:${version} -->\n${previousMarker}${rewriteHtml(homepage, project)}`
+  const content = `<!-- atlas-data:${version} -->\n${previousMarker}${rewriteHtml(homepage, offline)}`
   await writeFile(temporaryIndex, content, { flag: 'wx' })
   if (version !== await paperDataVersion(project)) {
     throw new Error('建置期間論文資料有變動，請重新輸出')
@@ -75,4 +75,4 @@ try {
   await rm(temporaryIndex, { force: true })
   if (!installed) await removeSnapshot(output)
 }
-console.log('離線版已更新。請用瀏覽器開啟專案根目錄的 index.html。')
+console.log('離線版已更新。請開啟根目錄的 index.html 並點選「開啟本機離線版」。')
