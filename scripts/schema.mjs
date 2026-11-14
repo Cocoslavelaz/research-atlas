@@ -1,3 +1,5 @@
+import { paperCategories } from '../src/lib/paper-categories.mjs'
+
 const string = { type: 'string' }
 const integer = { type: 'integer' }
 const array = items => ({ type: 'array', items })
@@ -18,9 +20,23 @@ export const extractionSchema = object({
   shortTitle: string,
   summary: string,
   topics: array(string),
+  categories: array({ type: 'string', enum: paperCategories.map(category => category.id) }),
+  comparison: array(object({
+    field: { type: 'string', enum: ['task', 'method', 'benchmark', 'metric', 'result', 'limitation'] },
+    text: string,
+    page: integer,
+    location: string,
+  })),
   notes: array(object({
     kind: { type: 'string', enum: ['研究問題', '方法', '發現', '限制'] },
     text: string,
+    page: integer,
+    location: string,
+  })),
+  equations: array(object({
+    title: string,
+    latex: string,
+    explanation: string,
     page: integer,
     location: string,
   })),
@@ -29,6 +45,12 @@ export const extractionSchema = object({
     doi: nullable(string),
     url: nullable(string),
     page: integer,
+    context: nullable(object({
+      page: integer,
+      location: string,
+      purpose: string,
+      connection: string,
+    })),
   })),
 })
 
@@ -43,6 +65,10 @@ export const recordSchema = object({
   }),
   ...extractionSchema.properties,
 })
+// Existing records can omit fields introduced after their extraction.
+recordSchema.required = recordSchema.required.filter(key => !['equations', 'comparison', 'categories'].includes(key))
+const storedReference = recordSchema.properties.references.items
+recordSchema.properties.references = array({ ...storedReference, required: storedReference.required.filter(key => key !== 'context') })
 
 function validate(schema, value, path) {
   if (schema.anyOf) {
@@ -61,12 +87,19 @@ function validate(schema, value, path) {
     if (!Object.hasOwn(schema.properties, key)) throw new Error(`${path} 包含未知欄位 ${key}`)
   }
   for (const [key, field] of Object.entries(schema.properties)) {
+    if (!Object.hasOwn(value, key) && !schema.required.includes(key)) continue
     validate(field, value[key], `${path}.${key}`)
   }
 }
 
 export const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 export const normalizeTopic = topic => topic.normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase()
+
+export function paperIdFromFilename(filename) {
+  if (!filename || !/\.pdf$/i.test(filename)) return null
+  const id = filename.slice(0, -4).trim().toLowerCase().replace(/[-\s]+/g, '-')
+  return slugPattern.test(id) ? id : null
+}
 
 export function validateRecord(record, id, status) {
   validate(recordSchema, record, id)
@@ -77,7 +110,15 @@ export function validateRecord(record, id, status) {
   if (new Set(record.topics.map(normalizeTopic)).size !== record.topics.length) {
     throw new Error(`${id} 的主題重複`)
   }
-  if ([...record.notes, ...record.references].some(item => item.page < 1)) {
+  if (new Set(record.categories).size !== (record.categories?.length ?? 0)) {
+    throw new Error(`${id} 的主題分類重複`)
+  }
+  const comparison = record.comparison ?? []
+  if (new Set(comparison.map(item => item.field)).size !== comparison.length) {
+    throw new Error(`${id} 的比較欄位重複`)
+  }
+  const contexts = record.references.flatMap(reference => reference.context ? [reference.context] : [])
+  if ([...record.notes, ...(record.equations ?? []), ...comparison, ...record.references, ...contexts].some(item => item.page < 1)) {
     throw new Error(`${id} 的 PDF 頁碼從 1 起算`)
   }
   for (const url of [record.sourceUrl, ...record.references.map(ref => ref.url)]) {
@@ -86,7 +127,7 @@ export function validateRecord(record, id, status) {
     }
   }
   if (!record.demo && (!/^[a-f0-9]{64}$/.test(record.source.sha256 ?? '') ||
-    record.source.filename !== `${id}.pdf` || !record.source.model)) {
+    paperIdFromFilename(record.source.filename) !== id || !record.source.model)) {
     throw new Error(`${id} 缺少匯入來源資訊`)
   }
   if (status === 'published' && !record.authors.length) {

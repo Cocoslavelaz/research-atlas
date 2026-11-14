@@ -1,15 +1,34 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Graph from '../components/Graph.astro'
+import Comparison from '../components/Comparison.astro'
 import { papers, topics, citations, paperUrl, route } from '../lib/atlas.mjs'
+import { paperCategories } from '../lib/paper-categories.mjs'
 import { normalizeTopic } from '../../scripts/schema.mjs'
+
+const indexed = papers.map(paper => ({
+  paper,
+  topicIds: paper.topics.map(normalizeTopic),
+  search: [paper.title, paper.shortTitle, paper.year, ...paper.authors, paper.summary, ...paper.topics,
+    ...paper.notes.map(note => note.text),
+    ...paperCategories.filter(category => paper.categories?.includes(category.id)).map(category => category.label),
+  ].join(' ').normalize('NFKC').toLowerCase(),
+}))
+const groups = paperCategories.map(category => ({
+  ...category,
+  entries: indexed.filter(({ paper }) => paper.categories?.includes(category.id)),
+}))
+const unclassified = indexed.filter(({ paper }) => !paper.categories?.length)
+if (unclassified.length) groups.push({
+  id: 'unclassified', label: '未分類', description: '尚未歸入上述主題的論文', entries: unclassified,
+})
 ---
 <Layout>
   <section class="hero">
     <div>
       <h1>論文知識庫</h1>
       <p class="hero-copy">整理研究重點、追溯原文，從共同主題與引用關係探索你的參考文獻。</p>
-      <a class="button" href="#library">瀏覽論文 <span aria-hidden="true">↓</span></a>
+      <a class="button" href="#library">依主題瀏覽 <span aria-hidden="true">↓</span></a>
     </div>
     <a class="hero-graph" href={route('graph/')} aria-label="開啟知識圖譜">
       <span class="preview-heading">知識圖譜 <span aria-hidden="true">↗</span></span>
@@ -18,48 +37,114 @@ import { normalizeTopic } from '../../scripts/schema.mjs'
   </section>
 
   <dl class="stats">
-    <div><dt>已發布論文</dt><dd>{papers.length}</dd></div>
+    <div><dt>論文</dt><dd>{papers.length}</dd></div>
     <div><dt>研究主題</dt><dd>{topics.length}</dd></div>
     <div><dt>庫內引用</dt><dd>{citations.length}</dd></div>
   </dl>
 
   <section id="library" class="library">
-    <div class="section-heading"><h2>論文總覽</h2><p id="count" aria-live="polite">{papers.length} 篇論文</p></div>
+    <div class="section-heading"><h2>依主題瀏覽</h2><p id="count" aria-live="polite">{papers.length} 篇論文</p></div>
     <div class="filters">
       <label>搜尋論文<input id="query" type="search" placeholder="標題、作者、主題或關鍵字" /></label>
-      <label>研究主題<select id="topic"><option value="">全部主題</option>{topics.map(topic => <option value={topic.id}>{topic.label}（{topic.papers.length}）</option>)}</select></label>
+      <label>細部主題<select id="topic"><option value="">全部主題</option>{topics.map(topic => <option value={topic.id}>{topic.label}（{topic.papers.length}）</option>)}</select></label>
     </div>
-    <div class="paper-grid">
-      {papers.map(paper => <article class="paper-card" data-topics={JSON.stringify(paper.topics.map(normalizeTopic))} data-search={[paper.title, paper.shortTitle, paper.year, ...paper.authors, paper.summary, ...paper.topics, ...paper.notes.map(note => note.text)].join(' ').normalize('NFKC').toLowerCase()}>
-        <div class="card-meta"><span>{paper.year ?? '年份待確認'}</span>{paper.demo && <span>示範文獻</span>}</div>
-        <h3><a href={paperUrl(paper.id)}>{paper.title}</a></h3>
-        <p class="authors">{paper.authors.slice(0, 2).join('、')}{paper.authors.length > 2 && ' 等'}</p>
-        <p>{paper.summary}</p>
-        <ul class="tags" aria-label="主題">{paper.topics.map(topic => <li>{topic}</li>)}</ul>
-        <a class="text-link" href={paperUrl(paper.id)}>閱讀重點 <span aria-hidden="true">↗</span></a>
-      </article>)}
-    </div>
-    <p class="empty" id="no-results" hidden={papers.length > 0}>{papers.length ? '沒有符合的論文。試試其他關鍵字或主題。' : '尚無已發布論文。請從匯入指南開始。'}</p>
+    {papers.length >= 2 && <Comparison papers={papers} />}
+    {import.meta.env.DEV && <p class="muted" id="paper-delete-status" data-endpoint={route('api/delete-paper/')} role="status"></p>}
+    {import.meta.env.ATLAS_OFFLINE && papers.length > 0 && <p class="manage-papers"><a href="http://127.0.0.1:4322/#library">到本機網站管理論文 ↗</a></p>}
+    {papers.length > 0 && <div class="topic-groups">
+      {groups.map(group => <section class="topic-group" data-topic-group={group.id} aria-labelledby={`topic-${group.id}`}>
+        <header>
+          <div class="topic-group-heading">
+            <h3 id={`topic-${group.id}`} lang={group.id === 'unclassified' ? 'zh-Hant' : 'en'}>{group.label}</h3>
+            <span data-topic-count>{group.entries.length} 篇</span>
+          </div>
+          <p>{group.description}</p>
+        </header>
+        {group.entries.length ? <ul class="topic-papers">
+          {group.entries.map(({ paper, topicIds, search }) => <li class="topic-paper" data-paper-id={paper.id} data-topics={JSON.stringify(topicIds)} data-search={search}>
+            <div>
+              <a class="topic-paper-title" href={paperUrl(paper.id)}>{paper.title}</a>
+              <div class="card-meta">
+                <span>{paper.year ?? '年份待確認'}</span>
+                {paper.demo && <span>示範文獻</span>}
+                {paper.status === 'draft' && <span>AI 生成・待核對</span>}
+              </div>
+            </div>
+            <div class="topic-paper-actions">
+              {papers.length >= 2 && <label class="compare-pick" hidden>
+                <input type="checkbox" value={paper.id} data-compare-pick aria-label={'加入比較：' + paper.title} /> 比較
+              </label>}
+              {import.meta.env.DEV && <button type="button" class="paper-delete" data-delete-paper={paper.id} aria-label={'刪除：' + paper.title}>刪除</button>}
+            </div>
+          </li>)}
+        </ul> : <p class="topic-empty">這個主題目前沒有論文。</p>}
+      </section>)}
+    </div>}
+    <p class="empty" id="no-results" hidden={papers.length > 0}>{papers.length ? '沒有符合的論文。試試其他關鍵字或主題。' : '尚無論文。請從匯入指南開始。'}</p>
   </section>
 </Layout>
 <script>
   const query = document.querySelector<HTMLInputElement>('#query')!
   const topic = document.querySelector<HTMLSelectElement>('#topic')!
-  const cards = [...document.querySelectorAll<HTMLElement>('.paper-card')]
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-topic-group]')].map(group => ({
+    group,
+    count: group.querySelector<HTMLElement>('[data-topic-count]')!,
+    rows: [...group.querySelectorAll<HTMLElement>('[data-paper-id]')].map(row => ({
+      row, topics: JSON.parse(row.dataset.topics!), search: row.dataset.search!,
+    })),
+  }))
   const count = document.querySelector('#count')!
   const empty = document.querySelector<HTMLElement>('#no-results')!
   function filter() {
-    const terms = query.value.normalize('NFKC').trim().toLowerCase().split(/\s+/)
-    let matches = 0
-    for (const card of cards) {
-      const hasText = terms.every(term => card.dataset.search!.includes(term))
-      const hasTopic = !topic.value || JSON.parse(card.dataset.topics!).includes(topic.value)
-      card.hidden = !(hasText && hasTopic)
-      if (!card.hidden) matches++
+    const terms = query.value.normalize('NFKC').trim().toLowerCase().split(/\s+/).filter(Boolean)
+    const matches = new Set()
+    for (const { group, count, rows } of groups) {
+      let groupMatches = 0
+      for (const { row, topics, search } of rows) {
+        row.hidden = !terms.every(term => search.includes(term)) || (!!topic.value && !topics.includes(topic.value))
+        if (!row.hidden) {
+          matches.add(row.dataset.paperId)
+          groupMatches++
+        }
+      }
+      count.textContent = `${groupMatches} 篇`
+      group.hidden = (terms.length > 0 || !!topic.value) && groupMatches === 0
     }
-    count.textContent = `${matches} 篇論文`
-    empty.hidden = matches > 0
+    count.textContent = `${matches.size} 篇論文`
+    empty.hidden = matches.size > 0
   }
   query.addEventListener('input', filter)
   topic.addEventListener('change', filter)
+
+  const deleteStatus = document.querySelector<HTMLElement>('#paper-delete-status')
+  if (deleteStatus) {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-delete-paper]')]
+    for (const button of buttons) {
+      button.addEventListener('click', async () => {
+        const id = button.dataset.deletePaper
+        const title = button.closest('li')?.querySelector('.topic-paper-title')?.textContent
+        if (!window.confirm(`從所有主題移除「${title}」？原始 PDF 會保留，筆記會移到專案的備份資料夾。`)) return
+        const copies = buttons.filter(item => item.dataset.deletePaper === id)
+        for (const copy of copies) copy.disabled = true
+        deleteStatus.textContent = '正在移除論文…'
+        try {
+          const response = await fetch(deleteStatus.dataset.endpoint!, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id }),
+          })
+          const result = await response.json()
+          if (!response.ok) {
+            deleteStatus.textContent = result.error || '無法完成移除，請再試一次。'
+            return
+          }
+          location.reload()
+        } catch {
+          deleteStatus.textContent = '無法連線到本機管理服務，請再試一次。'
+        } finally {
+          for (const copy of copies) copy.disabled = false
+        }
+      })
+    }
+  }
 </script>

@@ -1,0 +1,166 @@
+{
+  "id": "complementary-signals",
+  "status": "published",
+  "demo": false,
+  "source": {
+    "filename": "complementary-signals.pdf",
+    "sha256": "0aa25080e02fbc7c0922214e2fd20b1b94e093cc9f22449bb7ba3e23aca7a3c6",
+    "model": "gpt-4.1-mini"
+  },
+  "title": "From Tokens to Semantics: Leveraging Complementary Signals for Black-Box LLM’s Hallucination Detection",
+  "authors": [
+    "Urja Pawar",
+    "Rajitha Ramanayake",
+    "Nabeel Kemal",
+    "Owen O’Neill",
+    "Abhishek Mandal",
+    "Houssem Chatbri",
+    "Christopher Martin",
+    "Vadim Pertsovskiy"
+  ],
+  "year": 2026,
+  "doi": "10.48550/arXiv.2609.02679",
+  "sourceUrl": "https://arxiv.org/pdf/2609.02679v3",
+  "shortTitle": "黑箱 LLM 幻覺偵測",
+  "summary": "本文比較兩種黑箱大型語言模型的幻覺偵測訊號，分別為多次回答之間的語意熵，以及詞元對數機率提供的不確定性。研究在七個基準與四個模型上發現，兩種訊號可以互補，結合兩者的 Stacked 分類器在多數比較中接近最佳表現。",
+  "topics": [
+    "不確定性估計",
+    "語言模型",
+    "幻覺偵測",
+    "語意熵",
+    "可靠性評估"
+  ],
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "沒有可信參考文件時，研究比較兩種可由黑箱 API 取得的訊號。語意熵衡量多次回答在意思上是否分歧，詞元對數機率則提供模型產生文字時的信心。",
+      "page": 1,
+      "location": "Abstract"
+    },
+    {
+      "kind": "方法",
+      "text": "TopK 匯總多次回答的詞元不確定性。Gated 依語意群集數決定分類路徑，Stacked 則以標註資料學習如何結合語意與詞元特徵。",
+      "page": 3,
+      "location": "第 2 節，圖 1"
+    },
+    {
+      "kind": "發現",
+      "text": "若所有取樣回答都在同一個語意群集，標準語意熵為零，難以察覺一致的錯誤。部分案例仍能由詞元訊號區分，但若模型一直以高信心回答錯誤，兩種訊號都可能失效。",
+      "page": 6,
+      "location": "第 4 節，單一語意群集分析"
+    },
+    {
+      "kind": "發現",
+      "text": "七個基準、四個模型共提供 26 組比較。Stacked 在 11 組領先或並列第一，20 組的 AUROC 與該組最佳方法相差不超過 0.05。",
+      "page": 9,
+      "location": "6 Conclusion"
+    },
+    {
+      "kind": "限制",
+      "text": "Gated 和 Stacked 需要目標領域標註資料，研究未測試零樣本轉移。詞元方法依賴 API 回傳的對數機率，候選詞元數量也會影響可用訊號。",
+      "page": 9,
+      "location": "5 Limitations"
+    }
+  ],
+  "references": [
+    {
+      "title": "Detecting hallucinations in large language models using semantic entropy",
+      "doi": "10.1038/s41586-024-07421-0",
+      "url": "https://www.nature.com/articles/s41586-024-07421-0",
+      "page": 10
+    },
+    {
+      "title": "Semantic uncertainty: Linguistic invariances for uncertainty estimation in natural language generation",
+      "doi": null,
+      "url": "https://openreview.net/forum?id=VD-AYtP0dve",
+      "page": 10
+    },
+    {
+      "title": "HALT: Hallucination Assessment via Log-Probs as Time Series",
+      "doi": null,
+      "url": "https://arxiv.org/abs/2602.02888",
+      "page": 11
+    },
+    {
+      "title": "Uncertainty quantification for LLMs through minimum Bayes risk: Bridging confidence and consistency",
+      "doi": "10.48550/arXiv.2502.04964",
+      "url": "https://arxiv.org/abs/2502.04964",
+      "page": 11
+    },
+    {
+      "title": "Semantic entropy probes: Robust and cheap hallucination detection in LLMs",
+      "doi": null,
+      "url": "https://openreview.net/forum?id=YQvvJjLWX0",
+      "page": 10
+    },
+    {
+      "title": "AmbigQA: Answering ambiguous open-domain questions",
+      "doi": "10.18653/v1/2020.emnlp-main.466",
+      "url": "https://aclanthology.org/2020.emnlp-main.466",
+      "page": 11
+    },
+    {
+      "title": "HotpotQA: A dataset for diverse, explainable multi-hop question answering",
+      "doi": "10.18653/v1/D18-1259",
+      "url": "https://aclanthology.org/D18-1259",
+      "page": 11
+    },
+    {
+      "title": "SQuAD: 100,000+ questions for machine comprehension of text",
+      "doi": "10.18653/v1/D16-1264",
+      "url": "https://aclanthology.org/D16-1264",
+      "page": 11
+    }
+  ],
+  "equations": [
+    {
+      "title": "標準語意熵",
+      "latex": "\\mathrm{SE}(x)=-\\sum_{k=1}^{K}\\widehat p(C_k)\\log\\widehat p(C_k),\\qquad \\widehat p(C_k)=\\frac{|C_k|}{N}",
+      "explanation": "對同一提示取樣 N 次，再把語意相同的回答歸入同一群集 C_k。群集大小決定經驗機率，若全部回答都在同一群集，熵等於零。",
+      "page": 2,
+      "location": "式（1）"
+    }
+  ],
+  "comparison": [
+    {
+      "field": "task",
+      "text": "在黑箱模型僅回傳有限詞元機率的條件下，偵測生成內容是否含有幻覺。",
+      "page": 1,
+      "location": "摘要"
+    },
+    {
+      "field": "method",
+      "text": "結合詞元機率與多次生成之間的語意差異，以閘控或堆疊模型融合訊號。",
+      "page": 3,
+      "location": "§2，圖 1"
+    },
+    {
+      "field": "benchmark",
+      "text": "七組基準含 AmbigQA、HotpotQA 與財務摘要等。對照標準語意熵、TopK、CoCoA 等方法。",
+      "page": 5,
+      "location": "§3.2–3.3，表 2"
+    },
+    {
+      "field": "metric",
+      "text": "用五折保留資料的 AUROC 評估生成結果的幻覺偵測，並比較低偽陽性率下的偵測率。",
+      "page": 5,
+      "location": "§3.3"
+    },
+    {
+      "field": "result",
+      "text": "堆疊方法在 26 組模型與基準中有 11 組領先或並列，20 組距最佳分數不超過 0.05 AUROC。",
+      "page": 9,
+      "location": "§6"
+    },
+    {
+      "field": "limitation",
+      "text": "不同資料集及模型的訊號強弱不一，詞元機率回傳數也受 API 限制。",
+      "page": 9,
+      "location": "§5"
+    }
+  ],
+  "categories": [
+    "llm-uq",
+    "hallucination-detection"
+  ]
+}

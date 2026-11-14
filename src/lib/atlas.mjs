@@ -1,7 +1,15 @@
 import { normalizeTopic } from '../../scripts/schema.mjs'
 
 const records = import.meta.glob('../../data/papers/*.json', { eager: true, import: 'default' })
-export const papers = Object.values(records).filter(paper => paper.status === 'published')
+const visiblePapers = new Map(Object.values(records)
+  .filter(paper => paper.status === 'published').map(paper => [paper.id, paper]))
+if (import.meta.env.DEV || import.meta.env.ATLAS_OFFLINE) {
+  const drafts = import.meta.glob('../../data/drafts/*.json', { eager: true, import: 'default' })
+  for (const paper of Object.values(drafts)) {
+    if (paper.status === 'draft' && !visiblePapers.has(paper.id)) visiblePapers.set(paper.id, paper)
+  }
+}
+export const papers = [...visiblePapers.values()]
   .sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.title.localeCompare(b.title))
 
 export const paperUrl = id => route(`papers/${id}/`)
@@ -37,6 +45,8 @@ export const citations = papers.flatMap(paper => papers.flatMap(target => {
   })
   return evidence ? [{ from: paper.id, to: target.id, evidence }] : []
 }))
+
+export const citationId = edge => `citation-${edge.from}--${edge.to}`
 
 export function relatedPapers(paper) {
   return papers.filter(other => other.id !== paper.id).map(other => {

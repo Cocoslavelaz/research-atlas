@@ -32,21 +32,83 @@
   "notes": [
     {
       "kind": "研究問題",
-      "text": "開放領域問答需要從大量段落中有效選出可能包含答案的上下文。",
+      "text": "開放領域問答通常先從大量文獻中選出候選段落，再由閱讀器找答案。作者檢驗以學得的稠密向量取代 BM25 等詞彙比對，能否改善第一階段的檢索。",
       "page": 1,
       "location": "1 Introduction"
     },
     {
       "kind": "方法",
-      "text": "用雙編碼器分別表示問題和段落，讓檢索可在稠密向量空間中進行。",
+      "text": "以兩個獨立的 BERT 編碼器表示問題和段落。段落向量可以事先建立索引，收到問題後只需計算問題向量，再以內積找出候選段落。",
+      "page": 3,
+      "location": "3.1 Dense Passage Retriever"
+    },
+    {
+      "kind": "方法",
+      "text": "以問題對應的正例段落和負例訓練檢索器，讓正例取得較高分數。負例可來自同批次其他問題，也可使用 BM25 找到的難負例。",
+      "page": 3,
+      "location": "3.2 Training"
+    },
+    {
+      "kind": "發現",
+      "text": "多個開放領域問答資料集上，前 20 筆段落的檢索準確率比 Lucene BM25 高約 9 至 19 個百分點。這是候選段落的命中表現，與最終答案的準確率是不同的評估項目。",
       "page": 1,
       "location": "Abstract"
     },
     {
-      "kind": "發現",
-      "text": "論文報告前 20 筆段落檢索準確率較 Lucene BM25 高 9 至 19 個百分點。",
-      "page": 1,
-      "location": "Abstract"
+      "kind": "限制",
+      "text": "實驗使用開放領域問答資料及維基百科來源。用於其他領域或語料時，仍需評估編碼器是否能檢索到足夠的證據。",
+      "page": 4,
+      "location": "4.2 Question Answering Datasets"
     }
+  ],
+  "equations": [
+    {
+      "title": "問題與段落的相似度",
+      "latex": "\\operatorname{sim}(q,p)=E_Q(q)^\\top E_P(p)",
+      "explanation": "問題編碼器 E_Q 與段落編碼器 E_P 分別輸出向量。內積越大，段落在該問題的候選排序中越靠前。",
+      "page": 3,
+      "location": "式（1）"
+    }
+  ],
+  "comparison": [
+    {
+      "field": "task",
+      "text": "從大量 Wikipedia 段落中找出含有開放域問答答案的證據。",
+      "page": 1,
+      "location": "§1"
+    },
+    {
+      "field": "method",
+      "text": "以兩個編碼器分別產生問題向量和段落向量，用內積排序。",
+      "page": 3,
+      "location": "§3.1"
+    },
+    {
+      "field": "benchmark",
+      "text": "評估 Natural Questions、TriviaQA、WebQuestions、CuratedTREC 和 SQuAD。",
+      "page": 4,
+      "location": "§4.2"
+    },
+    {
+      "field": "metric",
+      "text": "衡量前 K 個檢索段落是否至少有一個包含答案。",
+      "page": 5,
+      "location": "表 2"
+    },
+    {
+      "field": "result",
+      "text": "相較於強 BM25 基準，前 20 段落的檢索準確率絕對提升約 9–19 個百分點。",
+      "page": 1,
+      "location": "摘要"
+    },
+    {
+      "field": "limitation",
+      "text": "SQuAD 問題最初根據給定段落撰寫，與開放域問答基準的問題來源不同。",
+      "page": 4,
+      "location": "§4.2"
+    }
+  ],
+  "categories": [
+    "rag"
   ]
 }

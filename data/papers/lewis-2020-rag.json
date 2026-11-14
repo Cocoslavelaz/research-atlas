@@ -36,7 +36,13 @@
       "title": "Dense Passage Retrieval for Open-Domain Question Answering",
       "doi": null,
       "url": "https://arxiv.org/abs/2004.04906",
-      "page": 12
+      "page": 12,
+      "context": {
+        "page": 2,
+        "location": "§2",
+        "purpose": "交代生成模型使用的稠密檢索器來源。",
+        "connection": "DPR 找出相關 Wikipedia 段落，RAG 將檢索結果當成生成答案的條件。"
+      }
     }
   ],
   "doi": "10.48550/arXiv.2005.11401",
@@ -44,21 +50,83 @@
   "notes": [
     {
       "kind": "研究問題",
-      "text": "模型參數難以更新與追溯來源，研究因此探討如何接入外部知識。",
+      "text": "只依賴模型參數儲存知識時，更新知識與追溯來源都較困難。研究把可檢索的外部語料接入生成模型，檢驗這種組合對知識密集任務的效果。",
       "page": 1,
       "location": "Abstract"
     },
     {
       "kind": "方法",
-      "text": "用 DPR 檢索維基百科段落，讓 BART 以問題與檢索段落為條件生成。",
+      "text": "DPR 從維基百科索引找出候選段落，BART 以輸入和候選段落為條件生成。檢索器給候選段落權重，生成模型估計各段落條件下的輸出機率。",
       "page": 2,
       "location": "2 Methods"
     },
     {
+      "kind": "方法",
+      "text": "RAG-Sequence 在整段輸出的層級對候選文件加權。RAG-Token 在每個詞元的位置重新混合文件條件機率，因此不同詞元可依賴不同的文件。",
+      "page": 3,
+      "location": "2.1 Models"
+    },
+    {
       "kind": "發現",
-      "text": "RAG 在多項開放領域問答測試中達到論文當時領先的準確率。",
+      "text": "Natural Questions 的精確匹配分數在表中分別為 DPR 41.5、RAG-Token 44.1、RAG-Sequence 44.5。TriviaQA 另有不同資料切分，對照結果時需使用表中相同欄位。",
       "page": 6,
       "location": "表 1"
+    },
+    {
+      "kind": "限制",
+      "text": "研究中的檢索語料為維基百科。作者指出，部分 MS MARCO 問題所需的資訊不在該語料內，因此這些題目的生成表現仍受資料覆蓋影響。",
+      "page": 5,
+      "location": "3.2 Abstractive Question Answering"
     }
+  ],
+  "equations": [
+    {
+      "title": "整段輸出的文件邊際化",
+      "latex": "p(y\\mid x)\\approx\\sum_{z\\in \\mathrm{TopK}(x)}p_\\eta(z\\mid x)\\prod_{i=1}^{N}p_\\theta(y_i\\mid x,z,y_{<i})",
+      "explanation": "x 是輸入，z 是候選段落，y 是輸出序列。先計算同一段落條件下整段輸出的機率，再按檢索權重合併各段落。",
+      "page": 3,
+      "location": "2.1 RAG-Sequence Model"
+    }
+  ],
+  "comparison": [
+    {
+      "field": "task",
+      "text": "把外部檢索引入生成模型，回答需要知識的問題。",
+      "page": 1,
+      "location": "摘要"
+    },
+    {
+      "field": "method",
+      "text": "RAG-Sequence 讓整個序列共享同一個文件變數，RAG-Token 允許不同詞元使用不同文件。",
+      "page": 3,
+      "location": "§2.1"
+    },
+    {
+      "field": "benchmark",
+      "text": "開放域問答使用 Natural Questions、TriviaQA、WebQuestions、CuratedTREC，並與 DPR 等基準比較。",
+      "page": 4,
+      "location": "§3.1"
+    },
+    {
+      "field": "metric",
+      "text": "用 Exact Match 衡量完成生成後的答案是否與參考答案相符。",
+      "page": 6,
+      "location": "表 1"
+    },
+    {
+      "field": "result",
+      "text": "Natural Questions 的 Exact Match 為 RAG-Sequence 44.5、RAG-Token 44.1、DPR 41.5。",
+      "page": 6,
+      "location": "表 1"
+    },
+    {
+      "field": "limitation",
+      "text": "部分生成問答與檢索所用 Wikipedia 的涵蓋範圍不同，可能查不到所需證據。",
+      "page": 5,
+      "location": "§3.2"
+    }
+  ],
+  "categories": [
+    "rag"
   ]
 }

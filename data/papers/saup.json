@@ -1,0 +1,188 @@
+{
+  "id": "saup",
+  "status": "published",
+  "demo": false,
+  "source": {
+    "filename": "saup.pdf",
+    "sha256": "1574a4cf165e04cbe11dd2a49c0e9a446704d3dc5ebed9a413492e66cadea364",
+    "model": "gpt-4.1-mini"
+  },
+  "title": "Uncertainty Propagation on LLM Agent",
+  "authors": [
+    "Qiwei Zhao",
+    "Dong Li",
+    "Yanchi Liu",
+    "Wei Cheng",
+    "Yiyou Sun",
+    "Mika Oishi",
+    "Takao Osaki",
+    "Katsushi Matsuda",
+    "Huaxiu Yao",
+    "Chen Zhao",
+    "Haifeng Chen",
+    "Xujiang Zhao"
+  ],
+  "year": 2025,
+  "doi": "10.18653/v1/2025.acl-long.302",
+  "sourceUrl": "https://aclanthology.org/2025.acl-long.302.pdf",
+  "shortTitle": "SAUP",
+  "summary": "本文提出 SAUP，依每個步驟的情境加權，估計大型語言模型代理在多步推理中累積的不確定性。作者在 HotpotQA、MMLU 與 StrategyQA 測試，以 AUROC 衡量不確定性分數區分正確與錯誤答案的能力。",
+  "topics": [
+    "語言模型",
+    "開放領域問答",
+    "不確定性估計",
+    "多步推理",
+    "隱藏馬可夫模型"
+  ],
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "多步代理會交替推理、採取行動及接收環境觀察。作者研究如何把中間步驟累積的風險納入評估，避免只用最後一步的不確定性判斷整體可靠度。",
+      "page": 1,
+      "location": "1 Introduction"
+    },
+    {
+      "kind": "方法",
+      "text": "SAUP 先取得每一步的不確定性，再用情境權重放大較關鍵的步驟。論文以加權均方根說明基本傳播方式，並提到實作另含用於數值穩定的項。",
+      "page": 3,
+      "location": "3.1 Weighted Uncertainty Propagation"
+    },
+    {
+      "kind": "方法",
+      "text": "單步分數結合思考及行動的不確定性。作者用依輸出長度正規化的預測熵估計兩者，讓不同長度的文字或動作較可比較。",
+      "page": 4,
+      "location": "3.2 Single-Step Uncertainty Estimation，式（3）"
+    },
+    {
+      "kind": "方法",
+      "text": "查詢偏移衡量目前軌跡與原始問題的差距，推理落差描述單步中的局部差異。學習式版本以連續隱藏馬可夫模型從距離訊號推估推理偏移狀態。",
+      "page": 5,
+      "location": "3.3 Agent Uncertainty Estimation"
+    },
+    {
+      "kind": "發現",
+      "text": "表 1 的三個問答資料集上，學習式 SAUP 的 AUROC 均優於表內單步基準。表 2 中，學習式情境權重在多數組合領先，HotpotQA 的 GPT-4o 組合則是位置權重得分更高。",
+      "page": 7,
+      "location": "表 1、表 2"
+    },
+    {
+      "kind": "限制",
+      "text": "學習式權重需要人工標註情境資料，標註成本與偏差會影響泛化。傳播也依賴單步估計的品質，若單步分數有誤，整體估計會受到影響。",
+      "page": 9,
+      "location": "6 Limitations"
+    }
+  ],
+  "references": [
+    {
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2210.03629"
+    },
+    {
+      "title": "Towards Uncertainty-Aware Language Agent",
+      "page": 9,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2401.14016"
+    },
+    {
+      "title": "Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2302.09664"
+    },
+    {
+      "title": "Evaluating Large Language Models Trained on Code",
+      "page": 9,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2107.03374"
+    },
+    {
+      "title": "Deep Bayesian Active Learning with Image Data",
+      "page": 9,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Language Models (Mostly) Know What They Know",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2207.05221"
+    },
+    {
+      "title": "WebGPT: Browser-Assisted Question-Answering with Human Feedback",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2112.09332"
+    },
+    {
+      "title": "Statistical Inference for Probabilistic Functions of Finite State Markov Chains",
+      "page": 9,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Uncertainty Estimation in Autoregressive Structured Prediction",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2002.07650"
+    },
+    {
+      "title": "Know What You Don't Know: Unanswerable Questions for SQuAD",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/1806.03822"
+    }
+  ],
+  "equations": [
+    {
+      "title": "加權不確定性傳播",
+      "latex": "U_{\\mathrm{agent}}=\\sqrt{\\frac{1}{N}\\sum_{i=1}^{N}(W_iU_i)^2}",
+      "explanation": "U_i 表示第 i 步的不確定性，W_i 是情境權重，N 是步數。公式以均方根把加權後的分數合成代理整體分數。",
+      "page": 3,
+      "location": "式（1）"
+    }
+  ],
+  "comparison": [
+    {
+      "field": "task",
+      "text": "評估多步問答代理的整體回答是否可靠。",
+      "page": 1,
+      "location": "§1"
+    },
+    {
+      "field": "method",
+      "text": "依每一步對當前情境的重要性加權，將步驟不確定性傳播並聚合為軌跡分數。",
+      "page": 3,
+      "location": "§3.1"
+    },
+    {
+      "field": "benchmark",
+      "text": "以 ReAct 代理執行 HotpotQA、MMLU 與 StrategyQA，並與語意熵、似然等基準比較。",
+      "page": 6,
+      "location": "§4.1"
+    },
+    {
+      "field": "metric",
+      "text": "用整條已執行軌跡的不確定性分數，計算區分最終正確與錯誤回答的 AUROC。",
+      "page": 6,
+      "location": "§4.1"
+    },
+    {
+      "field": "result",
+      "text": "StrategyQA 上，Llama 3 8B 的 SAUP-Learned AUROC 為 0.787，語意熵基準為 0.599。",
+      "page": 7,
+      "location": "表 1"
+    },
+    {
+      "field": "limitation",
+      "text": "學習情境權重需要標註資料，權重估計不準會影響不確定性傳播。",
+      "page": 9,
+      "location": "§6"
+    }
+  ],
+  "categories": [
+    "llm-uq",
+    "agentic-llm"
+  ]
+}

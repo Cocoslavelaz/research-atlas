@@ -1,0 +1,9 @@
+---
+import { sourcePageLink } from '../lib/comparison.mjs'
+const { paper, evidence, label = 'PDF' } = Astro.props
+const href = sourcePageLink(paper, evidence.page)
+---
+<small class="evidence-link">
+  {href ? <a href={href} target="_blank" rel="noopener noreferrer">{label} 第 {evidence.page} 頁 ↗</a> : <span>{label} 第 {evidence.page} 頁</span>}
+  {evidence.location && <span> · {evidence.location}</span>}
+</small>

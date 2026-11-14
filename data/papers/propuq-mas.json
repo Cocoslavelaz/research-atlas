@@ -1,0 +1,201 @@
+{
+  "id": "propuq-mas",
+  "status": "published",
+  "demo": false,
+  "source": {
+    "filename": "propuq-mas.pdf",
+    "sha256": "506f685974481a37c4006547370581b0d62c66fb9f3c701b6f18e75051ff15d0",
+    "model": "gpt-4.1-mini"
+  },
+  "title": "PropUQ-MAS: Propagation-Aware Uncertainty Quantification for LLM Multi-Agent Systems",
+  "authors": [
+    "Yaokun Liu",
+    "Yifan Liu",
+    "Daniel Yue Zhang",
+    "Ruichen Yao",
+    "Zelin Li",
+    "Dong Wang"
+  ],
+  "year": 2026,
+  "doi": "10.18653/2026.emnlp-main.891",
+  "sourceUrl": "https://aclanthology.org/2026.emnlp-main.891.pdf",
+  "shortTitle": "PropUQ-MAS",
+  "summary": "PropUQ-MAS 以有向圖描述大型語言模型多代理系統中的訊息依賴，結合各步驟本身的不確定性與繼承自上游的風險。作者在多種代理架構與任務上評估此方法，並發現它能改善辨識不可靠的中間訊息和最終答案的能力。",
+  "topics": [
+    "不確定性估計",
+    "多步推理",
+    "語言模型",
+    "多代理系統",
+    "不確定性傳播",
+    "可靠性評估"
+  ],
+  "notes": [
+    {
+      "kind": "研究問題",
+      "text": "多代理系統會把一個代理的輸出傳給其他代理。上游訊息有錯時，即使下游代理對自己的回答很有信心，錯誤也可能已經隨訊息傳遞。",
+      "page": 1,
+      "location": "1 Introduction，圖 1"
+    },
+    {
+      "kind": "方法",
+      "text": "把每次代理輸出當成節點，並用有向邊表示後續輸出使用哪些較早訊息。即使通訊拓撲有回饋，只要依實際執行時間展開，仍可得到有向無環圖。",
+      "page": 3,
+      "location": "3.1 Problem Setup"
+    },
+    {
+      "kind": "方法",
+      "text": "每個節點結合自身的不確定性，以及來自上游的加權風險。邊權重以代理自報的訊息採納程度估計，並按時間順序逐步計算，因此可在執行期間更新。",
+      "page": 4,
+      "location": "3.2.2、3.3，式（2）"
+    },
+    {
+      "kind": "發現",
+      "text": "最終答案的不確定性估計在多數設定改善。跨資料集、模型與拓撲的相對增幅中位數為 AUROC 7.32% 與 PRR 41.36%。",
+      "page": 6,
+      "location": "4.1，表 1"
+    },
+    {
+      "kind": "發現",
+      "text": "在評估的中間代理輸出中，AUROC 平均相對提升 6.10%，PRR 平均相對提升 47.58%。這組數值衡量的是中間輸出的辨識表現。",
+      "page": 7,
+      "location": "4.2.1，表 2"
+    },
+    {
+      "kind": "限制",
+      "text": "代理自報的採納分數是傳播強度的代理值，機率校準仍有限。公式使用條件獨立假設，整體效果也依賴各節點的單步不確定性估計。",
+      "page": 10,
+      "location": "Limitations"
+    }
+  ],
+  "references": [
+    {
+      "title": "Why Do Multi-Agent LLM Systems Fail?",
+      "page": 10,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Training Verifiers to Solve Math Word Problems",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2110.14168"
+    },
+    {
+      "title": "Reflexion: Language Agents with Verbal Reinforcement Learning",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "UProp: Investigating the Uncertainty Propagation of LLMs in Multi-Step Agentic Decision-Making",
+      "page": 10,
+      "doi": null,
+      "url": "https://arxiv.org/abs/2506.17419",
+      "context": {
+        "page": 2,
+        "location": "§2.1",
+        "purpose": "將 UProp 列為循序決策不確定性分解的先前研究。",
+        "connection": "UProp 區分當前決策自身與前序傳入的不確定性。PropUQ-MAS 也區分局部與繼承的訊號，並在多代理執行圖中建模。"
+      }
+    },
+    {
+      "title": "Benchmarking Uncertainty Quantification Methods for Large Language Models with LM-Polygraph",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Just Ask for Calibration: Strategies for Eliciting Calibrated Confidence Scores from Language Models Fine-Tuned with Human Feedback",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversations",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Fact-Checking the Output of Large Language Models via Token-Level Uncertainty Quantification",
+      "page": 10,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Mind the Ambiguity: Aleatoric Uncertainty Quantification in LLMs for Safe Medical Question Answering",
+      "page": 11,
+      "doi": null,
+      "url": null
+    },
+    {
+      "title": "Uncertainty Propagation on LLM Agent",
+      "page": 12,
+      "doi": "10.18653/v1/2025.acl-long.302",
+      "url": "https://aclanthology.org/2025.acl-long.302/",
+      "context": {
+        "page": 2,
+        "location": "§2.1",
+        "purpose": "在相關研究中用 SAUP 說明既有工作如何透過情境權重評估單代理的多步軌跡，並引出多代理互動的需求。",
+        "connection": "SAUP 對軌跡步驟加權。PropUQ-MAS 沿執行圖的互動邊傳播訊號，涵蓋同一節點有多個上游或輸出傳給多個接收者的情形。"
+      }
+    }
+  ],
+  "equations": [
+    {
+      "title": "圖上的遞迴不確定性",
+      "latex": "r_v=1-(1-u_v)\\prod_{p\\in\\operatorname{Pa}(v)}(1-\\alpha_{pv}r_p)",
+      "explanation": "u_v 是節點本身的不確定性，r_p 是上游節點的累積風險，α_pv 是邊的傳播權重。沒有上游節點時，空乘積等於 1，結果即為 u_v。",
+      "page": 4,
+      "location": "式（2）"
+    }
+  ],
+  "comparison": [
+    {
+      "field": "task",
+      "text": "評估 LLM 多代理系統各節點的中間輸出，以及整個系統的最終輸出是否可靠。",
+      "page": 1,
+      "location": "§1"
+    },
+    {
+      "field": "method",
+      "text": "在執行圖上合併節點本身的不確定性及沿上游連線繼承的不確定性，並以接收代理對上游內容的接受程度加權。",
+      "page": 4,
+      "location": "§3.2.2，式（2）"
+    },
+    {
+      "field": "benchmark",
+      "text": "GSM8K、MBPP+、MedQA，涵蓋循序、階層與去中心化配置。比較各種局部不確定性估計器加上傳播前後的結果。",
+      "page": 6,
+      "location": "表 1"
+    },
+    {
+      "field": "metric",
+      "text": "用 AUROC 與 PRR 評估個別中間輸出的品質排序，也另外評估系統的最終輸出。中間評估的對象是節點輸出。",
+      "page": 7,
+      "location": "§4.2.1，表 2"
+    },
+    {
+      "field": "result",
+      "text": "在最終輸出評估中，相對於只使用局部訊號，AUROC 的相對提升中位數為 7.32%，PRR 為 41.36%。",
+      "page": 6,
+      "location": "§4.1，表 1"
+    },
+    {
+      "field": "limitation",
+      "text": "傳播規則簡化了不同上游訊號的相依性。代理自行回報的接受度只是對實際影響的估計。",
+      "page": 10,
+      "location": "Limitations"
+    }
+  ],
+  "categories": [
+    "llm-uq",
+    "agentic-llm"
+  ]
+}

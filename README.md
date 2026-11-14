@@ -13,6 +13,30 @@ npm.cmd run dev
 
 依終端顯示的網址開啟，預設為 [localhost:4321](http://localhost:4321/)。使用 `npm.cmd run build` 建置，輸出在 `dist/`。本站建置與瀏覽只需要已發布資料，不需 API 金鑰。
 
+## 離線開啟
+
+用瀏覽器開啟專案根目錄的 `index.html`，即可瀏覽最近一次輸出的論文庫、詳情與圖譜。頁面、樣式和公式字型存放於 `.atlas-offline/`，請將它與 `index.html` 一起保留。離線版包含本機的待核對摘要。
+
+使用 Astro 開發模式時，新增或更新論文後會自動輸出離線版。等摘要生成，再重新整理 `index.html` 即可。伺服器關閉期間放入的 PDF 會在下次啟動後處理。也可用 `node scripts/build-offline.mjs` 手動重建。
+
+## 依主題瀏覽
+
+- 論文庫依 RAG、LLM UQ、hallucination detection 和 Agentic LLM 分區。新 PDF 匯入時會依內容判斷，可歸入多區。點篇名可閱讀完整筆記；核對時可在論文 JSON 的 `categories` 調整分區。
+
+## 從論文庫移除論文
+
+在本機開發網站的論文清單按「刪除」，確認後會從所有分類、論文頁和圖譜移除。網站會把已發布和待審的 JSON 移到 `.atlas-trash/<id>/` 備份。原始 PDF 會留在原處，同 ID 的 PDF 會略過匯入。根目錄 `index.html` 會重新建置；從離線版可點「到本機網站管理論文」。
+
+要還原，將備份的 `papers.json` 和 `drafts.json`（若有）各自移回 `data/papers/<id>.json` 和 `data/drafts/<id>.json`，再移除空的 `.atlas-trash/<id>/` 資料夾。公開網站隨下一次正式資料發布更新。
+
+## 比較論文與閱讀引用
+
+- 在論文庫勾選 2 至 4 篇論文，再按「比較論文」。對照表列出研究任務、方法、資料集與基準、指標與評估時點、結果及限制。可用的原文連結會跳到證據頁。
+- 在本機開發網站的比較表按「生成 AI 比較」，可查看共同點、差異與可能的研究缺口。系統用同一組 `OPENAI_API_KEY` 將所選論文的比較筆記送到 OpenAI，每則結論附至少兩篇論文的 PDF 頁碼。對照原文後再引用。
+- 從根目錄 `index.html` 開啟對照表時，可點「帶著選取的論文到本機網站生成 AI 比較」，預設連到執行中的 4322 開發伺服器。GitHub Pages 提供靜態對照表。
+- 在知識圖譜點選引用箭頭，或在「文獻引用」逐條展開，查看正文的引用用途、方法關係和參考文獻頁碼。
+- 新 PDF 匯入時會一併萃取這兩種資料。正文證據不足的引用會保留書目頁碼；核對時可在 `comparison` 和 `references[].context` 補上來源。
+
 ## 第一次設定 GitHub Pages
 
 1. 在 GitHub 建立公開的空白儲存庫，例如 `research-atlas`。若使用已初始化的儲存庫，先確認目前分支和遠端，再推送本專案。
@@ -43,13 +67,13 @@ npm.cmd run dev
 
 ## 在本機處理 PDF
 
-需要保留 PDF 與草稿在本機時，將原檔放在忽略的 `.private-papers/`，將 `.env.example` 複製成 `.env` 並填入自己的金鑰。執行：
+1. 用 `npm.cmd run dev` 啟動本機網站。如果套件已安裝且 PowerShell 找不到 npm，可用 `node .\node_modules\astro\bin\astro.mjs dev`。保持終端機開啟。
+2. 把 PDF 放進專案的 `.private-papers/`。檔名可用英文字母、數字、空格與連字號，單檔上限 20 MB。匯入會保留原始檔名，網址與摘要檔名中的空格會轉為連字號。網站啟動時會掃描資料夾，運作期間也會偵測新加入或更新的 PDF，等檔案穩定後才開始匯入。
+3. 摘要生成後，重新整理本機網站即可瀏覽。論文會標示「AI 生成・待核對」。同一 ID 已有正式資料時，本機會繼續顯示正式版本。
 
-```powershell
-npm.cmd run ingest -- .private-papers
-```
+程式使用 Windows 環境變數 `OPENAI_API_KEY`，也可將 `.env.example` 複製成 `.env` 後填入金鑰。匯入會將 PDF 傳至 OpenAI API。網站關閉期間放入的 PDF 會在下次啟動時處理。若匯入失敗，依終端機訊息修正後可重啟網站重試，或執行 `node --env-file-if-exists=.env scripts/ingest.mjs .private-papers` 手動匯入。
 
-程式仍會將 PDF 傳至 OpenAI API。核對完後只提交可公開的正式 JSON，提交前以 `git status --short` 與 `git diff --cached --name-only` 檢查範圍。公開 GitHub 儲存庫中的 PDF、草稿與 Git 歷史都可被讀取。
+核對完後只提交可公開的正式 JSON，提交前以 `git status --short` 與 `git diff --cached --name-only` 檢查範圍。公開 GitHub 儲存庫中的 PDF、草稿與 Git 歷史都可被讀取。
 
 ## 直接從網站上傳的設計
 

@@ -1,0 +1,211 @@
+---
+import { paperUrl, route } from '../lib/atlas.mjs'
+import { comparisonEntries, comparisonFields } from '../lib/comparison.mjs'
+import EvidenceLink from './EvidenceLink.astro'
+
+const { papers } = Astro.props
+const exampleIds = ['saup', 'propuq-mas', '123']
+const hasExample = exampleIds.every(id => papers.some(paper => paper.id === id))
+---
+<div class="compare-bar" id="compare-controls" hidden>
+  <p id="compare-status" role="status">勾選 2 至 4 篇論文進行比較。</p>
+  <div class="compare-actions">
+    {hasExample && <button id="compare-example" type="button" data-ids={JSON.stringify(exampleIds)}>範例：代理何時能提早介入？</button>}
+    <button id="compare-clear" type="button" disabled>清除選取</button>
+    <button id="compare-open" class="button" type="button" disabled>比較論文</button>
+  </div>
+</div>
+<dialog id="compare-dialog" aria-labelledby="compare-title">
+  <header class="compare-heading">
+    <h2 id="compare-title">跨論文比較</h2>
+    <form method="dialog"><button type="submit" autofocus>關閉</button></form>
+  </header>
+  {hasExample && <aside id="compare-reading" hidden>
+    <h3>代理執行到一半時，有哪些訊號能支持提早介入？</h3>
+    <p>SAUP 用中間步驟評估整條軌跡的可靠度。PropUQ-MAS 評估個別代理的中間輸出。Last Step Matters 則直接測試深度研究任務進行到一半時能否預測最終失敗。三篇的任務、評估時點和預測對象各有差異，表中的數字應搭配這些條件閱讀。</p>
+  </aside>}
+  {import.meta.env.DEV && <section class="compare-ai" aria-labelledby="compare-ai-title">
+    <div class="compare-ai-actions">
+      <h3 id="compare-ai-title">AI 比較結論</h3>
+      <button type="button" class="button" id="compare-generate" data-endpoint={route('api/compare/')}>生成 AI 比較</button>
+    </div>
+    <p class="muted">將所選論文的比較筆記傳給 OpenAI，生成附原文頁碼的共同點、差異與可能的研究缺口。</p>
+    <p id="compare-ai-status" role="status"></p>
+    <div id="compare-ai-result" hidden></div>
+  </section>}
+  {import.meta.env.ATLAS_OFFLINE && <p class="compare-online">
+    <a id="compare-online" href="http://127.0.0.1:4322/">帶著選取的論文到本機網站生成 AI 比較 ↗</a>
+  </p>}
+  <div class="compare-scroll" role="region" aria-label="論文證據對照表，可左右捲動" tabindex="0">
+    <table aria-label="論文證據對照表">
+      <thead><tr><th scope="col">比較面向</th>{papers.map(paper => <th scope="col" data-compare-column={paper.id} hidden>
+        <a href={paperUrl(paper.id)} title={paper.title}>{paper.shortTitle}</a>
+        {paper.status === 'draft' && <small>AI 生成・待核對</small>}
+      </th>)}</tr></thead>
+      <tbody>{comparisonFields.map(([field, label, fallback]) => <tr><th scope="row">{label}</th>
+        {papers.map(paper => {
+          const evidence = comparisonEntries(paper, field, fallback)
+          return <td data-compare-column={paper.id} hidden>{evidence.length ? evidence.map(item => <div class="compare-evidence">
+            <p>{item.text}</p>
+            <EvidenceLink paper={paper} evidence={item} />
+          </div>) : <span class="muted">尚無可核對的資料</span>}</td>
+        })}
+      </tr>)}</tbody>
+    </table>
+  </div>
+</dialog>
+<script>
+  const controls = document.querySelector<HTMLElement>('#compare-controls')!
+  const status = document.querySelector<HTMLElement>('#compare-status')!
+  const open = document.querySelector<HTMLButtonElement>('#compare-open')!
+  const clear = document.querySelector<HTMLButtonElement>('#compare-clear')!
+  const example = document.querySelector<HTMLButtonElement>('#compare-example')
+  const reading = document.querySelector<HTMLElement>('#compare-reading')
+  const dialog = document.querySelector<HTMLDialogElement>('#compare-dialog')!
+  const checkboxes = [...document.querySelectorAll<HTMLInputElement>('[data-compare-pick]')]
+  const columns = document.querySelectorAll<HTMLElement>('[data-compare-column]')
+  const exampleIds: string[] = JSON.parse(example?.dataset.ids ?? '[]')
+  const online = document.querySelector<HTMLAnchorElement>('#compare-online')
+  const generate = document.querySelector<HTMLButtonElement>('#compare-generate')
+  const aiStatus = document.querySelector<HTMLElement>('#compare-ai-status')
+  const result = document.querySelector<HTMLElement>('#compare-ai-result')
+  const selected = new Set(checkboxes.filter(input => input.checked).map(input => input.value))
+  let selection = ''
+  let request: AbortController | undefined
+
+  function resetResult() {
+    request?.abort()
+    request = undefined
+    if (generate) generate.disabled = false
+    if (aiStatus) aiStatus.textContent = ''
+    if (result) {
+      result.replaceChildren()
+      result.hidden = true
+    }
+  }
+
+  function update() {
+    const nextSelection = [...selected].sort().join(',')
+    if (nextSelection !== selection) resetResult()
+    selection = nextSelection
+    if (online) online.hash = new URLSearchParams({ compare: selection }).toString()
+    status.textContent = selected.size
+      ? `已選 ${selected.size} 篇（最多 4 篇）`
+      : '勾選 2 至 4 篇論文進行比較。'
+    open.disabled = selected.size < 2 || selected.size > 4
+    clear.disabled = selected.size === 0
+    for (const input of checkboxes) {
+      input.checked = selected.has(input.value)
+      input.disabled = selected.size >= 4 && !input.checked
+    }
+    for (const cell of columns) cell.hidden = !selected.has(cell.dataset.compareColumn!)
+    if (reading) reading.hidden = exampleIds.length !== selected.size || !exampleIds.every(id => selected.has(id))
+  }
+
+  for (const input of checkboxes) {
+    input.closest('label')!.hidden = false
+    input.addEventListener('change', () => {
+      if (input.checked && selected.size < 4) selected.add(input.value)
+      if (!input.checked) selected.delete(input.value)
+      update()
+    })
+  }
+  clear.addEventListener('click', () => {
+    selected.clear()
+    update()
+  })
+  open.addEventListener('click', () => dialog.showModal())
+  example?.addEventListener('click', () => {
+    selected.clear()
+    for (const id of exampleIds) selected.add(id)
+    update()
+    dialog.showModal()
+  })
+
+  type Citation = { title: string; page: number; location: string; url?: string }
+  type Point = { text: string; citations: Citation[] }
+  const sections = [
+    ['common', '共同點'],
+    ['differences', '差異'],
+    ['gaps', '可能的研究缺口'],
+  ]
+
+  function render(output: Record<string, Point[]>) {
+    const content = document.createDocumentFragment()
+    for (const [key, label] of sections) {
+      const heading = document.createElement('h4')
+      heading.textContent = label
+      const list = document.createElement('ul')
+      for (const point of output[key]) {
+        const row = document.createElement('li')
+        const claim = document.createElement('p')
+        claim.textContent = point.text
+        const sources = document.createElement('div')
+        sources.className = 'compare-ai-sources'
+        for (const citation of point.citations) {
+          const source = citation.url ? document.createElement('a') : document.createElement('span')
+          source.textContent = `${citation.title} · PDF 第 ${citation.page} 頁 · ${citation.location}`
+          if (source instanceof HTMLAnchorElement && citation.url) {
+            source.href = citation.url
+            source.target = '_blank'
+            source.rel = 'noopener noreferrer'
+          }
+          sources.append(source)
+        }
+        row.append(claim, sources)
+        list.append(row)
+      }
+      if (list.childElementCount === 0) {
+        const empty = document.createElement('li')
+        empty.textContent = '所選論文的證據不足以提出這類結論。'
+        list.append(empty)
+      }
+      content.append(heading, list)
+    }
+    result?.replaceChildren(content)
+  }
+
+  if (generate && aiStatus && result) {
+    generate.addEventListener('click', async () => {
+      resetResult()
+      const controller = new AbortController()
+      request = controller
+      generate.disabled = true
+      aiStatus.textContent = '正在整理所選論文，請稍候…'
+      try {
+        const response = await fetch(generate.dataset.endpoint!, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selection.split(',') }),
+          signal: controller.signal,
+        })
+        const output = await response.json()
+        if (controller.signal.aborted) return
+        if (!response.ok) {
+          aiStatus.textContent = output.error || '暫時無法生成比較，請再試一次。'
+          return
+        }
+        render(output)
+        result.hidden = false
+        aiStatus.textContent = 'AI 已生成比較。請依原文頁碼核對。'
+      } catch {
+        if (!controller.signal.aborted) aiStatus.textContent = '無法連線到本機比較服務，請再試一次。'
+      } finally {
+        if (request === controller) {
+          request = undefined
+          generate.disabled = false
+        }
+      }
+    })
+
+    const linked = new URLSearchParams(location.hash.slice(1)).get('compare')?.split(',') ?? []
+    if (linked.length >= 2 && linked.length <= 4 && new Set(linked).size === linked.length &&
+        linked.every(id => checkboxes.some(input => input.value === id))) {
+      selected.clear()
+      for (const id of linked) selected.add(id)
+      dialog.showModal()
+    }
+  }
+  controls.hidden = false
+  update()
+</script>

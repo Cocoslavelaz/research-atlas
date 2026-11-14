@@ -8,6 +8,7 @@ const { title = 'Research Atlas', section = 'library' } = Astro.props
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#090e18" />
     <meta name="description" content="以主題、研究重點與文獻關係整理論文的個人知識庫。" />
     <title>{title}</title>
   </head>
@@ -15,7 +16,7 @@ const { title = 'Research Atlas', section = 'library' } = Astro.props
     <a class="skip" href="#main">跳至內容</a>
     <header class="site-header">
       <div class="shell header-inner">
-        <a class="brand" href={route()}><span class="brand-mark" aria-hidden="true">✳</span> Research Atlas</a>
+        <a class="brand" href={route()}><span class="brand-mark" aria-hidden="true">⌖</span> Research Atlas</a>
         <nav aria-label="主選單">
           <a href={route()} aria-current={section === 'library' ? 'page' : undefined}>論文庫</a>
           <a href={route('graph/')} aria-current={section === 'graph' ? 'page' : undefined}>知識圖譜</a>
@@ -25,7 +26,7 @@ const { title = 'Research Atlas', section = 'library' } = Astro.props
     </header>
     <main id="main" class="shell"><slot /></main>
     <footer class="site-footer shell">
-      <a class="brand" href={route()}><span class="brand-mark" aria-hidden="true">✳</span> Research Atlas</a>
+      <a class="brand" href={route()}><span class="brand-mark" aria-hidden="true">⌖</span> Research Atlas</a>
       <span>論文參考文獻知識庫</span>
     </footer>
   </body>

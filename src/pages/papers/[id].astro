@@ -1,5 +1,7 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 import { paperUrl, papers, relatedPapers, route, sourceLink } from '../../lib/atlas.mjs'
 
 export function getStaticPaths() {
@@ -8,12 +10,16 @@ export function getStaticPaths() {
 const { paper } = Astro.props
 const related = relatedPapers(paper)
 const source = sourceLink(paper)
+const noteGroups = ['研究問題', '方法', '發現', '限制'].map(kind => ({
+  kind,
+  notes: paper.notes.filter(note => note.kind === kind),
+}))
 ---
 <Layout title={paper.shortTitle + ' | Research Atlas'}>
   <article class="detail">
     <a class="text-link" href={route() + '#library'}>← 返回論文庫</a>
     <header class="page-heading">
-      <div class="card-meta"><span>{paper.year ?? '年份待確認'}</span>{paper.demo && <span>示範文獻</span>}</div>
+      <div class="card-meta"><span>{paper.year ?? '年份待確認'}</span>{paper.demo && <span>示範文獻</span>}{paper.status === 'draft' && <span>AI 生成・待核對</span>}</div>
       <h1>{paper.title}</h1>
       <p>{paper.authors.join('、')}</p>
       <ul class="tags" aria-label="研究主題">{paper.topics.map(topic => <li>{topic}</li>)}</ul>
@@ -25,12 +31,20 @@ const source = sourceLink(paper)
       {paper.doi && <p class="muted">DOI <a href={'https://doi.org/' + encodeURI(paper.doi)}>{paper.doi}</a></p>}
     </section>
     <section class="detail-section">
-      <h2>研究重點</h2>
-      <ul class="notes">{paper.notes.map(note => <li>
-        <strong>{note.kind}</strong>
-        <div><p>{note.text}</p><small>PDF 第 {note.page} 頁 · {note.location}</small></div>
-      </li>)}</ul>
+      <h2>詳細重點</h2>
+      <div class="note-groups">{noteGroups.filter(group => group.notes.length).map(group => <section class="note-group">
+        <h3>{group.kind}</h3>
+        <ul>{group.notes.map(note => <li><p>{note.text}</p><small>PDF 第 {note.page} 頁 · {note.location}</small></li>)}</ul>
+      </section>)}</div>
     </section>
+    {!!paper.equations?.length && <section class="detail-section">
+      <h2>關鍵公式</h2>
+      {paper.equations.map(equation => <figure class="equation">
+        <h3>{equation.title}</h3>
+        <div class="equation-math" set:html={katex.renderToString(equation.latex, { displayMode: true, trust: false, throwOnError: false, maxExpand: 200, maxSize: 20 })} />
+        <figcaption><p>{equation.explanation}</p><small>PDF 第 {equation.page} 頁 · {equation.location}</small></figcaption>
+      </figure>)}
+    </section>}
     <section class="detail-section">
       <h2>相關論文</h2>
       {related.length ? <ul class="notes">{related.map(({ other, shared, outgoing, incoming }) => <li>
@@ -51,3 +65,13 @@ const source = sourceLink(paper)
     </section>}
   </article>
 </Layout>
+<style>
+  .note-groups { display: grid; gap: .8rem; }
+  .note-group, .equation { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.15rem; }
+  .note-group h3, .equation h3 { color: var(--accent); margin-bottom: .5rem; }
+  .note-group ul { margin: 0; padding-left: 1.15rem; }
+  .note-group li + li { margin-top: .75rem; }
+  .note-group p, .equation p { margin-bottom: .2rem; white-space: pre-line; }
+  .equation { margin: 0 0 .8rem; }
+  .equation-math { overflow-x: auto; padding-inline: .25rem; }
+</style>

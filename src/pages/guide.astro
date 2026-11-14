@@ -3,12 +3,14 @@ import Layout from '../layouts/Layout.astro'
 ---
 <Layout title="匯入論文 | Research Atlas" section="guide">
   <div class="detail">
-    <section class="page-heading"><h1>匯入論文</h1><p>將 PDF 加入專案，讓 Actions 產生可核對的摘要草稿。</p></section>
-    <ol class="guide">
-      <li><h2>加入 PDF</h2><p>在 GitHub 儲存庫開啟 <code>papers/</code>，選擇 <strong>Add file → Upload files</strong>。使用小寫英文、數字與連字號命名，單檔上限 20 MB。公開儲存庫只放可公開散布的 PDF。</p></li>
-      <li><h2>核對草稿</h2><p>上傳到 <code>main</code> 後，開啟 <strong>Actions → 匯入論文 PDF</strong> 查看執行結果。到 <code>data/drafts/</code> 核對書目、摘要、PDF 頁序及參考文獻。</p></li>
-      <li><h2>發布至網站</h2><p>把確認後的 JSON 移到 <code>data/papers/</code>，將 <code>status</code> 改為 <code>published</code> 並提交到 <code>main</code>。部署完成後，論文庫及知識圖譜會一併更新。</p></li>
-    </ol>
-    <p>首次設定金鑰、GitHub Pages 或本機匯入時，請參閱專案的 <code>README.md</code>。</p>
+    <section class="page-heading"><h1>匯入論文</h1></section>
+    <section class="detail-section">
+      <h2>本機論文庫</h2>
+      <p>本機網站開著時，把 PDF 放進專案的 <code>.private-papers/</code>。檔名可用英文字母、數字、空格與連字號，單檔上限 20 MB。摘要完成後會出現在論文庫，並標示「AI 生成・待核對」。</p>
+    </section>
+    <section class="detail-section">
+      <h2>GitHub Pages</h2>
+      <p>將可公開散布的 PDF 上傳到 <code>main</code> 的 <code>papers/</code>，在 <strong>Actions → 匯入論文 PDF</strong> 查看結果。公開網站的發布流程請參閱專案的 <code>README.md</code>。</p>
+    </section>
   </div>
 </Layout>
